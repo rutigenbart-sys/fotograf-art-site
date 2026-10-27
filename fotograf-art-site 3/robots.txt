@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /privacy.html
+
+Host: https://xn--80af6aaljmg.art
+Sitemap: https://xn--80af6aaljmg.art/sitemap.xml
