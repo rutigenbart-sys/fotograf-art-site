@@ -410,3 +410,7 @@ html.js .rv.in{opacity:1;transform:none}
 @media (min-width:860px){
   #hero::after{background:linear-gradient(90deg,rgba(20,18,17,.82) 0%,rgba(20,18,17,.5) 36%,rgba(20,18,17,0) 62%),linear-gradient(180deg,rgba(20,18,17,.55) 0%,rgba(20,18,17,0) 28%,rgba(20,18,17,.3) 60%,rgba(20,18,17,.9) 100%)}
 }
+
+/* about photo compact */
+.about-ph img{height:auto;aspect-ratio:1/1;max-height:70vh;object-position:50% 40%}
+@media (min-width:900px){.about-ph img{aspect-ratio:4/5}}
