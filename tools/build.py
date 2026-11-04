@@ -13,7 +13,7 @@ from data import *
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TODAY = "2026-11-04"
-DEFAULT_OG = SITE + "/img/svadebnyj-fotograf-moskva-nevesta-fata.jpg"
+DEFAULT_OG = SITE + "/img/og-cover.jpg"
 
 # ------------------------------------------------------------------ утилиты
 TR = dict(zip("абвгдеёжзийклмнопрстуфхцчшщъыьэюя",
@@ -293,7 +293,7 @@ def strip_tags(s): return re.sub(r"<[^>]+>", "", s)
 
 def page(path, title, desc, h1, lead, crumbs, body, tags=(), cover=None, cover_alt="", faq=None, area=None, geo="RU-MOW", place="Москва", extra_schema=None, aside=None, toc=None):
     url = SITE + path
-    og = SITE + "/" + cover if cover else DEFAULT_OG
+    og = SITE + "/" + cover if (cover and not cover.startswith("img/svadebnyj-fotograf-moskva-")) else DEFAULT_OG
     bc_items = [{"@type": "ListItem", "position": i + 1, "name": n, "item": SITE + u} for i, (u, n) in enumerate(crumbs)]
     graph = [
         {"@type": "WebPage", "@id": url + "#page", "url": url, "name": title, "description": desc, "inLanguage": "ru-RU", "dateModified": TODAY, "isPartOf": {"@id": SITE + "/#site"}, "about": {"@id": SITE + "/#business"}},
@@ -336,6 +336,9 @@ def page(path, title, desc, h1, lead, crumbs, body, tags=(), cover=None, cover_a
 <meta property="og:title" content="{attr(title)}">
 <meta property="og:description" content="{attr(desc)}">
 <meta property="og:image" content="{og}">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:image" content="{og}">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#000000">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
