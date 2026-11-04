@@ -206,3 +206,8 @@ html.plb-open{overflow:hidden}
   .hdr-tel{display:flex!important}
 }
 @media (min-width:1220px){.nav{gap:26px}.nav a{letter-spacing:.2em}}
+
+/* вертикальные фото в обложке: целиком, на размытом фоне того же кадра */
+.dz-cover.is-p{aspect-ratio:auto;display:grid;place-items:center;padding:clamp(12px,2vw,24px) 0}
+.dz-cover.is-p::before{content:"";position:absolute;inset:-30px;background:var(--bg) center/cover;filter:blur(32px) brightness(.4);transform:scale(1.1)}
+.dz-cover.is-p img{position:relative;width:auto;height:auto;max-width:100%;max-height:min(78vh,820px);object-fit:contain;border-radius:var(--r)}

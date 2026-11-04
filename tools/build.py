@@ -75,35 +75,34 @@ def zinfo(k):
 # ------------------------------------------------------------------ обложки из портфолио
 import zlib
 _W="img/svadebnyj-fotograf-moskva-"
-PORTFOLIO = {
- "fotograf-v-zags-04": "Жених в тёмном костюме и невеста в белом платье с кружевными перчатками подписывают документы за столом регистрации в светлом зале ЗАГСа, рядом лежит нежный белый букет",
- "fotograf-v-zags-06": "Весёлые жених в синем костюме с бабочкой и невеста в белом платье с букетом показывают обручальные кольца в светлом зале ЗАГСа, репортажный кадр сразу после росписи",
- "fotograf-v-zags-11": "Молодожёны с подругой невесты позируют в светлом зале торжественной регистрации брака с мраморным полом, лепниной и тяжёлыми шторами",
- "fotograf-v-zags-12": "Улыбающиеся молодожёны с букетом невесты у входа в здание ЗАГСа после регистрации брака в тёплом уличном свете",
- "fotograf-v-zags-13": "Жених и невеста в фате держатся за руки на заднем сиденье автомобиля по дороге на роспись, живой репортажный кадр свадебного утра",
- "svadebnyj-portret-05": "Свадебный портрет: жених склоняется над невестой в нежном поцелуе на мраморных балясинах, графичная композиция",
- "svadebnyj-portret-06": "Чёрно-белый свадебный кадр: жених и невеста у белой колонны среди тёмной зелени, строгая классическая композиция",
- "svadebnyj-portret-07": "Жених и невеста танцуют первый танец в белоснежном зале с арочными окнами, высокими потолками и лепниной, много мягкого света",
- "svadebnyj-portret-09": "Жених и невеста идут по парадной лестнице дворца с золотыми балюстрадами и ковровой дорожкой, шлейф фаты летит за невестой",
- "venchanie-v-hrame-02": "Венчание: жених кружит невесту в пышном платье перед золотым иконостасом старинного храма в тёплом свете свечей",
-}
-COVER_POOL = {
- "msk": ["svadebnyj-portret-09","svadebnyj-portret-07","venchanie-v-hrame-02","svadebnyj-portret-06","svadebnyj-portret-05","fotograf-v-zags-13","fotograf-v-zags-11","fotograf-v-zags-04"],
- "podm": ["venchanie-v-hrame-02","svadebnyj-portret-06","svadebnyj-portret-07","svadebnyj-portret-05","fotograf-v-zags-13","svadebnyj-portret-09"],
- "zags": ["fotograf-v-zags-04","fotograf-v-zags-06","fotograf-v-zags-11","fotograf-v-zags-12","fotograf-v-zags-13"],
- "palace": ["svadebnyj-portret-09","svadebnyj-portret-07","fotograf-v-zags-11","fotograf-v-zags-04"],
-}
+def _load_portfolio():
+    g = open(os.path.join(ROOT, "index.html"), encoding="utf-8").read()
+    out = {}
+    for src, alt in re.findall(r'"src": "(svadebnyj-fotograf-moskva-[^"]+)", "cat": "[^"]*", "alt": "((?:[^"\\]|\\.)*)"', g):
+        out[src[len("svadebnyj-fotograf-moskva-"):]] = json.loads('"%s"' % alt).split(". ")[0].rstrip(".")
+    return out
+PORTFOLIO = _load_portfolio()   # все свадебные фото из галереи: имя -> краткое описание
+COVER_POOL = {"gen": [k for k in PORTFOLIO if not k.startswith("fotograf-v-zags")],
+              "zags": [k for k in PORTFOLIO if k.startswith("fotograf-v-zags")]}
+_POOLMAP = {"msk": "gen", "podm": "gen", "palace": "zags", "zags": "zags"}
 _used = {}
 def portfolio_cover(pool, key):
-    """Детерминированно выбирает фото из портфолио; подряд соседние страницы получают разные."""
-    lst = COVER_POOL[pool]; i = _used.get(pool, zlib.crc32(key.encode()) % len(lst)); _used[pool] = (i + 1) % len(lst)
+    """Фото идут по кругу: пока не использованы все, повторов нет; соседние страницы получают разные кадры."""
+    pool = _POOLMAP[pool]; lst = COVER_POOL[pool]
+    i = _used.get(pool, zlib.crc32(pool.encode()) % len(lst)); _used[pool] = (i + 1) % len(lst)
     return lst[i]
+_dims = {}
+def _dim(cover):
+    if cover not in _dims:
+        from PIL import Image
+        _dims[cover] = Image.open(os.path.join(ROOT, cover)).size
+    return _dims[cover]
 def cover_img(cover, alt, eager=True):
     """<img> для обложки; фото портфолио отдаём с srcset (760w и 2000w)."""
     ld = 'loading="eager"' if eager else 'loading="lazy"'
     if cover.startswith("img/svadebnyj-fotograf-moskva-"):
         b = "/" + cover[:-4]
-        return f'<img src="{b}-s.jpg" srcset="{b}-s.jpg 760w, {b}.jpg 2000w" sizes="(min-width:1200px) 1200px, 100vw" alt="{attr(alt)}" width="2000" height="1125" {ld} decoding="async">'
+        return f'<img src="{b}-s.jpg" srcset="{b}-s.jpg 760w, {b}.jpg 2000w" sizes="(min-width:1200px) 1200px, 100vw" alt="{attr(alt)}" width="{_dim(cover)[0]}" height="{_dim(cover)[1]}" {ld} decoding="async">'
     return f'<img src="/{cover}" alt="{attr(alt)}" width="1600" height="900" {ld} decoding="async">'
 def long_alt(photo_key, where, kind_note):
     """Развёрнутое описание: что на фото + к какой теме страницы относится. Без утверждений, что снято именно в этом месте."""
@@ -312,7 +311,9 @@ def page(path, title, desc, h1, lead, crumbs, body, tags=(), cover=None, cover_a
     cover_html = ""
     if cover:
         _cap = "Пример работы из портфолио" if cover.startswith("img/svadebnyj-fotograf-moskva-") else cover_alt.split(". ")[0]
-        cover_html = f'<div class="wrap" style="padding-top:8px"><figure class="dz-cover">{cover_img(cover, cover_alt)}<figcaption>{esc(_cap)}</figcaption></figure></div>'
+        _w, _h = _dim(cover); _port = _h > _w
+        _fig = f'class="dz-cover is-p" style="--bg:url(/{cover[:-4]}-s.jpg)"' if _port else 'class="dz-cover"'
+        cover_html = f'<div class="wrap" style="padding-top:8px"><figure {_fig}>{cover_img(cover, cover_alt)}<figcaption>{esc(_cap)}</figcaption></figure></div>'
     toc_html = ""
     if toc:
         toc_html = '<nav class="dz-toc" aria-label="Содержание"><b>Содержание</b><ol>' + "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in toc) + "</ol></nav>"
