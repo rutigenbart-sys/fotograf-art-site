@@ -71,6 +71,45 @@ def zinfo(k):
     nom, loc, gen, ins, addr, okr, kind = ZAGS[k]
     return dict(key=k, nom=nom, loc=loc, gen=gen, ins=ins, addr=addr, okr=okr, kind=kind, url=f"/zags/{k}.html")
 
+
+# ------------------------------------------------------------------ обложки из портфолио
+import zlib
+_W="img/svadebnyj-fotograf-moskva-"
+PORTFOLIO = {
+ "fotograf-v-zags-04": "Жених в тёмном костюме и невеста в белом платье с кружевными перчатками подписывают документы за столом регистрации в светлом зале ЗАГСа, рядом лежит нежный белый букет",
+ "fotograf-v-zags-06": "Весёлые жених в синем костюме с бабочкой и невеста в белом платье с букетом показывают обручальные кольца в светлом зале ЗАГСа, репортажный кадр сразу после росписи",
+ "fotograf-v-zags-11": "Молодожёны с подругой невесты позируют в светлом зале торжественной регистрации брака с мраморным полом, лепниной и тяжёлыми шторами",
+ "fotograf-v-zags-12": "Улыбающиеся молодожёны с букетом невесты у входа в здание ЗАГСа после регистрации брака в тёплом уличном свете",
+ "fotograf-v-zags-13": "Жених и невеста в фате держатся за руки на заднем сиденье автомобиля по дороге на роспись, живой репортажный кадр свадебного утра",
+ "svadebnyj-portret-05": "Свадебный портрет: жених склоняется над невестой в нежном поцелуе на мраморных балясинах, графичная композиция",
+ "svadebnyj-portret-06": "Чёрно-белый свадебный кадр: жених и невеста у белой колонны среди тёмной зелени, строгая классическая композиция",
+ "svadebnyj-portret-07": "Жених и невеста танцуют первый танец в белоснежном зале с арочными окнами, высокими потолками и лепниной, много мягкого света",
+ "svadebnyj-portret-09": "Жених и невеста идут по парадной лестнице дворца с золотыми балюстрадами и ковровой дорожкой, шлейф фаты летит за невестой",
+ "venchanie-v-hrame-02": "Венчание: жених кружит невесту в пышном платье перед золотым иконостасом старинного храма в тёплом свете свечей",
+}
+COVER_POOL = {
+ "msk": ["svadebnyj-portret-09","svadebnyj-portret-07","venchanie-v-hrame-02","svadebnyj-portret-06","svadebnyj-portret-05","fotograf-v-zags-13","fotograf-v-zags-11","fotograf-v-zags-04"],
+ "podm": ["venchanie-v-hrame-02","svadebnyj-portret-06","svadebnyj-portret-07","svadebnyj-portret-05","fotograf-v-zags-13","svadebnyj-portret-09"],
+ "zags": ["fotograf-v-zags-04","fotograf-v-zags-06","fotograf-v-zags-11","fotograf-v-zags-12","fotograf-v-zags-13"],
+ "palace": ["svadebnyj-portret-09","svadebnyj-portret-07","fotograf-v-zags-11","fotograf-v-zags-04"],
+}
+_used = {}
+def portfolio_cover(pool, key):
+    """Детерминированно выбирает фото из портфолио; подряд соседние страницы получают разные."""
+    lst = COVER_POOL[pool]; i = _used.get(pool, zlib.crc32(key.encode()) % len(lst)); _used[pool] = (i + 1) % len(lst)
+    return lst[i]
+def cover_img(cover, alt, eager=True):
+    """<img> для обложки; фото портфолио отдаём с srcset (760w и 2000w)."""
+    ld = 'loading="eager"' if eager else 'loading="lazy"'
+    if cover.startswith("img/svadebnyj-fotograf-moskva-"):
+        b = "/" + cover[:-4]
+        return f'<img src="{b}-s.jpg" srcset="{b}-s.jpg 760w, {b}.jpg 2000w" sizes="(min-width:1200px) 1200px, 100vw" alt="{attr(alt)}" width="2000" height="1125" {ld} decoding="async">'
+    return f'<img src="/{cover}" alt="{attr(alt)}" width="1600" height="900" {ld} decoding="async">'
+def long_alt(photo_key, where, kind_note):
+    """Развёрнутое описание: что на фото + к какой теме страницы относится. Без утверждений, что снято именно в этом месте."""
+    return (f"{PORTFOLIO[photo_key]}. Пример работы свадебного фотографа Дмитрия (Фотограф.art), Москва. "
+            f"Иллюстрация к статье: {where}. {kind_note}")
+
 # ------------------------------------------------------------------ тексты
 ENV = {
  "center": [
@@ -272,7 +311,8 @@ def page(path, title, desc, h1, lead, crumbs, body, tags=(), cover=None, cover_a
     tags_html = "".join(f"<span>{t}</span>" for t in tags)
     cover_html = ""
     if cover:
-        cover_html = f'<div class="wrap" style="padding-top:8px"><figure class="dz-cover"><img src="/{cover}" alt="{attr(cover_alt)}" width="1600" height="900" loading="eager" decoding="async"><figcaption>{esc(cover_alt)}</figcaption></figure></div>'
+        _cap = "Пример работы из портфолио" if cover.startswith("img/svadebnyj-fotograf-moskva-") else cover_alt.split(". ")[0]
+        cover_html = f'<div class="wrap" style="padding-top:8px"><figure class="dz-cover">{cover_img(cover, cover_alt)}<figcaption>{esc(_cap)}</figcaption></figure></div>'
     toc_html = ""
     if toc:
         toc_html = '<nav class="dz-toc" aria-label="Содержание"><b>Содержание</b><ol>' + "".join(f'<li><a href="#{a}">{t}</a></li>' for a, t in toc) + "</ol></nav>"
@@ -454,10 +494,13 @@ def build_district(d, siblings):
     body = "\n".join([s1, s2, s3, s4, s5, s6, s7, other])
     toc = [("kto", "Что и как снимаю"), ("zags", "ЗАГС и выбор"), ("mesta", "Где снимать"), ("plan", "План дня"), ("banket", "Банкет и события"), ("ceny", "Цены"), ("faq", "Вопросы")]
     cover = f"img/moskva/{d['slug']}.jpg"
-    cover = cover if exists(cover) else None
+    if exists(cover): cover_alt = f"Район {n}: атмосфера для свадебной прогулки"
+    else:
+        pk = portfolio_cover("msk", d["slug"]); cover = _W + pk + ".jpg"
+        cover_alt = long_alt(pk, f"свадебная фотосъёмка, ЗАГС, прогулка и банкет — район {n}, Москва", "Фотограф приезжает на роспись, венчание, прогулку и банкет в любой район Москвы и Подмосковья, съёмка от 5 000 ₽.")
     area = [{"@type": "Place", "name": f"{n}, Москва"}] + BUSINESS_AREA_MSK
     crumbs = [("/", "Главная"), ("/moskva/", "Районы Москвы"), (path, n)]
-    return page(path, title, desc, h1, lead, crumbs, body, tags=tags, cover=cover, cover_alt=f"Район {n}: атмосфера для свадебной прогулки", faq=faq, area=area, place=f"{n}, Москва", toc=toc)
+    return page(path, title, desc, h1, lead, crumbs, body, tags=tags, cover=cover, cover_alt=cover_alt, faq=faq, area=area, place=f"{n}, Москва", toc=toc)
 
 # ------------------------------------------------------------------ Подмосковье
 def build_city(c, others):
@@ -500,9 +543,13 @@ def build_city(c, others):
     oth = section("goroda", "Другие города Подмосковья", '<div class="dz-links">' + "".join(f'<a class="chip" href="{x["url"]}">{x["name"]}</a>' for x in others if x["slug"] != c["slug"]) + '</div>' + P('<a href="/podmoskove/">Все города</a> · <a href="/moskva/">Районы Москвы</a> · <a href="/zags/">ЗАГСы Москвы</a>'))
     body = "\n".join([s1, s2, s3, s4, s5, s6, s7, oth])
     toc = [("kto", "Как проходит съёмка"), ("zags", "ЗАГС и запись"), ("mesta", "Где снимать"), ("plan", "План дня"), ("banket", "Банкет и события"), ("ceny", "Цены"), ("faq", "Вопросы")]
-    cover = f"img/podmoskove/{c['slug']}.jpg"; cover = cover if exists(cover) else None
+    cover = f"img/podmoskove/{c['slug']}.jpg"
+    if exists(cover): cover_alt = f"Город {n}: атмосфера для свадебной прогулки"
+    else:
+        pk = portfolio_cover("podm", c["slug"]); cover = _W + pk + ".jpg"
+        cover_alt = long_alt(pk, f"свадебный фотограф, ЗАГС, венчание и свадебная прогулка — {n}, Московская область", "Выезд свадебного фотографа в Подмосковье: роспись, венчание, прогулка, банкет, съёмка от 5 000 ₽.")
     area = [{"@type": "City", "name": n}, {"@type": "AdministrativeArea", "name": "Московская область"}]
-    return page(path, title, desc, h1, lead, [("/", "Главная"), ("/podmoskove/", "Подмосковье"), (path, n)], body, tags=tags, cover=cover, cover_alt=f"Город {n}: атмосфера для свадебной прогулки", faq=faq, area=area, geo="RU-MOS", place=f"{n}, Московская область", toc=toc)
+    return page(path, title, desc, h1, lead, [("/", "Главная"), ("/podmoskove/", "Подмосковье"), (path, n)], body, tags=tags, cover=cover, cover_alt=cover_alt, faq=faq, area=area, geo="RU-MOS", place=f"{n}, Московская область", toc=toc)
 
 # ------------------------------------------------------------------ страницы ЗАГСов
 ZAGS_STEPS = [
@@ -566,9 +613,13 @@ def build_zags(k, same_okr, near_districts):
     s7 = section("eshche", f"Другие ЗАГСы: {OKRUGS[okr][1]}", '<div class="dz-links">' + "".join(f'<a class="chip" href="/zags/{x}.html">{zinfo(x)["nom"]}</a>' for x in others) + "</div>" + P('<a href="/zags/">Все ЗАГСы Москвы</a> · <a href="/moskva/">Районы Москвы</a>')) if others else section("eshche", "Ещё ЗАГСы", P('<a href="/zags/">Все ЗАГСы Москвы</a> · <a href="/moskva/">Районы Москвы</a>'))
     body = "\n".join([s1, s2, s3, s4, s5, s6, s7])
     toc = [("adres", "Адрес"), ("kak", "Как проходит роспись"), ("podgotovka", "Подготовка"), ("progulka", "Где погулять"), ("ceny", "Цены"), ("faq", "Вопросы")]
-    cover = f"img/zags/{k}.jpg"; cover = cover if exists(cover) else None
+    cover = f"img/zags/{k}.jpg"
+    if exists(cover): cover_alt = f"{nom}: атмосфера места"
+    else:
+        pk = portfolio_cover("palace" if z["kind"] == "palace" else "zags", k); cover = _W + pk + ".jpg"
+        cover_alt = long_alt(pk, f"фотограф в ЗАГС: {nom}, {z['addr']}, Москва", "Съёмка росписи в ЗАГСе от 5 000 ₽: встреча у входа, церемония, первые поздравления и фото на память. Кадр показывает стиль работы, а не интерьер этого ЗАГСа.")
     extra = [{"@type": "GovernmentOffice", "name": nom, "address": {"@type": "PostalAddress", "streetAddress": z["addr"], "addressLocality": "Москва", "addressCountry": "RU"}}]
-    return page(path, title, desc, h1, lead, [("/", "Главная"), ("/zags/", "ЗАГСы Москвы"), (path, nom)], body, tags=tags, cover=cover, cover_alt=f"{nom}: атмосфера места", faq=faq, area=BUSINESS_AREA_MSK, place="Москва", extra_schema=extra, toc=toc)
+    return page(path, title, desc, h1, lead, [("/", "Главная"), ("/zags/", "ЗАГСы Москвы"), (path, nom)], body, tags=tags, cover=cover, cover_alt=cover_alt, faq=faq, area=BUSINESS_AREA_MSK, place="Москва", extra_schema=extra, toc=toc)
 
 # ------------------------------------------------------------------ хабы
 def okr_block(compact=False):

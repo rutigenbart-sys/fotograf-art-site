@@ -50,7 +50,7 @@ function paint(){
   fill(slides[0],mod(cur-1)); fill(slides[1],cur); fill(slides[2],mod(cur+1));
   const it=items[cur];
   cnt.textContent=String(cur+1).padStart(2,'0')+' / '+String(items.length).padStart(2,'0');
-  capB.textContent=it.alt||''; capS.textContent=it.exif||'';
+  capB.textContent=(it.alt||'').split('. ')[0]; capS.textContent=it.exif||'';
   slides.forEach((s,i)=>s.setAttribute('aria-hidden',i===1?'false':'true'));
   root.classList.toggle('one',items.length<2);
 }
