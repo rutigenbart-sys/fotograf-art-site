@@ -1,0 +1,208 @@
+/* =========================================================
+   Фотограф.art — чёрная тема, плавные анимации, новая галерея,
+   блок районов и страницы районов/ЗАГСов.
+   Подключается ПОСЛЕ style.css и переопределяет его токены.
+   ========================================================= */
+:root{
+  --paper:#000; --paper-2:#080808; --ink:#F3EEE9; --ink-2:#B9AFA8; --ink-3:#8C847E;
+  --night:#000; --night-2:#0b0b0b;
+  --line:rgba(243,238,233,.13);
+  --card:#0d0d0d;
+  --r:12px;      /* небольшое скругление фотографий */
+  --r-lg:16px;   /* карточки и блоки */
+  --ease-out:cubic-bezier(.16,1,.3,1);
+  color-scheme:dark;
+}
+html{scroll-behavior:auto;background:#000;overflow-x:clip;scrollbar-color:#2a2625 #000;scrollbar-width:thin}
+body{background:#000;color:var(--ink);overflow-x:clip;max-width:100%}
+::selection{background:rgba(168,128,120,.55);color:#fff}
+/* ничего не должно вылезать по горизонтали */
+img,video,svg,iframe{max-width:100%}
+.wrap,section,main,footer,header{max-width:100%}
+p,li,h1,h2,h3,summary,a,span{overflow-wrap:break-word}
+.big-tel{white-space:normal;font-size:clamp(30px,8.4vw,64px)}
+.filters{flex-wrap:wrap;overflow:visible;margin:0 0 30px;padding:0}
+
+/* Lenis */
+html.lenis,html.lenis body{height:auto}
+.lenis.lenis-smooth{scroll-behavior:auto!important}
+.lenis.lenis-stopped{overflow:clip}
+.lenis [data-lenis-prevent]{overscroll-behavior:contain}
+
+/* прогресс прокрутки */
+.fx-bar{position:fixed;left:0;top:0;right:0;height:2px;z-index:70;background:linear-gradient(90deg,#8B9785,#C9A39A);transform-origin:0 50%;transform:scaleX(0);pointer-events:none}
+
+/* шапка и поверхности */
+.hdr.solid{background:rgba(0,0,0,.72);-webkit-backdrop-filter:saturate(1.4) blur(16px);backdrop-filter:saturate(1.4) blur(16px);color:var(--ink);box-shadow:0 1px 0 var(--line)}
+body::before{background:#000}
+.svc,.seo{background:var(--paper-2)}
+.svc,.seo,.prices,.what,.contact,.ftr{border-top:1px solid var(--line)}
+.card,.sv{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg)}
+.card-ph{border-radius:0}
+.sv-ph{background:#111}
+.tk,.calc{border-radius:var(--r-lg)}
+.tk{background:var(--card)}
+.form{background:var(--card);border:1px solid var(--line);color:var(--ink);border-radius:var(--r-lg)}
+.form small a{color:var(--ink-2)}
+.fl label{color:var(--ink-3)}
+.btn-dark{background:var(--ink);color:#000}
+.btn-dark:hover{background:#fff}
+.btn-line{border-color:rgba(243,238,233,.3)}
+.btn-line:hover{border-color:var(--ink);background:rgba(243,238,233,.06)}
+.about-ph img,.card-ph,.sv-ph,.gi{border-radius:var(--r)}
+.about-ph img{border-radius:var(--r)}
+.about-ph::before{border-radius:var(--r)}
+.card-ph{border-radius:var(--r) var(--r) 0 0}
+.sv-ph{border-radius:var(--r) var(--r) 0 0}
+.hero-ph figure{border-radius:0}
+.faq details{transition:background .4s var(--ease-out)}
+.gi{background:#0d0d0d}
+
+/* ---------- Реveal: фото и блоки появляются плавно ---------- */
+@media (prefers-reduced-motion:no-preference){
+  html.js :is(.rv,.gi,.card,.sv,.tk,.about-ph,.sp-art,.faq details,.steps li,.calc,.form,.dz-fact,.dz-zc,.dz-pl,.dz-cover,.dz-cta,.okr,.dz-aside>*,.dz-step){
+    opacity:0;transform:translate3d(0,38px,0) scale(.985);
+    transition:opacity 1.1s var(--ease-out),transform 1.2s var(--ease-out);
+    will-change:opacity,transform}
+  html.js :is(.rv,.gi,.card,.sv,.tk,.about-ph,.sp-art,.faq details,.steps li,.calc,.form,.dz-fact,.dz-zc,.dz-pl,.dz-cover,.dz-cta,.okr,.dz-aside>*,.dz-step).in{opacity:1;transform:none;will-change:auto}
+  /* фото: из размытия в резкость + лёгкое «приближение» */
+  html.js :is(.gi,.card-ph,.sv-ph,.about-ph,.dz-cover) img{transform:scale(1.09);filter:blur(14px);transition:transform 1.8s var(--ease-out),filter 1.3s var(--ease-out),opacity .7s}
+  html.js :is(.gi,.card,.sv,.about-ph,.dz-cover).in img{transform:scale(1);filter:none}
+  .gi:hover img,.card:hover .card-ph img,.sv:hover .sv-ph img{transform:scale(1.045)!important;transition:transform 1.1s var(--ease-out)!important}
+  /* заголовки: буква за буквой */
+  .fx-split .ch{display:inline-block;opacity:0;transform:translate3d(0,.6em,0) rotate(3deg);filter:blur(7px);
+    transition:opacity .8s var(--ease-out),transform 1s var(--ease-out),filter .8s var(--ease-out);
+    transition-delay:min(calc(var(--i)*26ms),1200ms)}
+  .fx-split.in .ch{opacity:1;transform:none;filter:none}
+}
+.fx-split .w{display:inline-block;white-space:nowrap}
+@media (prefers-reduced-motion:reduce){
+  .fx-split .ch{opacity:1;transform:none;filter:none}
+  html.js :is(.rv,.gi,.card,.sv,.tk,.about-ph,.sp-art,.faq details,.steps li,.calc,.form){opacity:1;transform:none}
+}
+
+/* ---------- Новая галерея (свайп вперёд и назад) ---------- */
+.plb{position:fixed;inset:0;z-index:95;background:#000;color:var(--on-night);display:grid;grid-template-rows:auto minmax(0,1fr) auto;opacity:0;visibility:hidden;transition:opacity .4s var(--ease-out),visibility .4s;touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none}
+.plb.open{opacity:1;visibility:visible}
+.plb-top{display:flex;justify-content:space-between;align-items:center;padding:calc(8px + env(safe-area-inset-top,0px)) max(16px,env(safe-area-inset-right,0px)) 6px max(16px,env(safe-area-inset-left,0px));font-size:12px;letter-spacing:.22em;font-variant-numeric:tabular-nums;z-index:3}
+.plb-x{width:48px;height:48px;border:0;background:none;color:var(--on-night);display:grid;place-items:center;margin-right:-10px;border-radius:50%}
+.plb-x svg{width:24px;height:24px}
+.plb-st{position:relative;overflow:hidden;min-height:0;cursor:grab;touch-action:none}
+.plb-st:active{cursor:grabbing}
+.plb-tr{position:absolute;inset:0;display:flex;width:300%;will-change:transform;transform:translate3d(-33.3333%,0,0)}
+.plb-sl{flex:0 0 33.3333%;height:100%;margin:0;display:grid;place-items:center;padding:0 max(10px,env(safe-area-inset-left,0px));background-position:center;background-repeat:no-repeat;background-size:contain;min-width:0}
+.plb-sl img{max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain;border-radius:var(--r);opacity:0;transition:opacity .5s;-webkit-user-drag:none;pointer-events:none}
+.plb-sl img.ld{opacity:1}
+.plb-nav{position:absolute;top:50%;transform:translateY(-50%);width:56px;height:56px;border-radius:50%;border:1px solid var(--line);background:rgba(0,0,0,.45);color:var(--on-night);display:none;place-items:center;z-index:4;transition:background .3s,transform .3s var(--ease-out)}
+.plb-nav svg{width:20px;height:20px}
+.plb-nav:hover{background:rgba(243,238,233,.12);transform:translateY(-50%) scale(1.06)}
+.plb-p{left:max(20px,env(safe-area-inset-left,0px))}.plb-nx{right:max(20px,env(safe-area-inset-right,0px))}
+@media (hover:hover) and (min-width:760px){.plb-nav{display:grid}}
+.plb.one .plb-nav{display:none}
+.plb-cap{padding:10px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));display:flex;justify-content:space-between;gap:8px 24px;flex-wrap:wrap;font-size:13px;color:var(--on-night-2);z-index:3}
+.plb-cap b{font-family:var(--f-serif);font-style:italic;font-weight:400;font-size:19px;color:var(--on-night)}
+.plb-hint{position:absolute;left:0;right:0;bottom:calc(64px + env(safe-area-inset-bottom,0px));text-align:center;font-size:11px;letter-spacing:.22em;text-transform:uppercase;color:var(--on-night-2);pointer-events:none;opacity:0;transition:opacity .6s}
+.plb.hint .plb-hint{opacity:.8}
+@media (hover:hover){.plb-hint{display:none}}
+html.plb-open{overflow:hidden}
+
+/* ---------- Блок «Районы Москвы» ---------- */
+.rn{background:#000}
+.rn-h{display:grid;gap:18px;margin-bottom:clamp(32px,5vw,56px)}
+@media (min-width:900px){.rn-h{grid-template-columns:1.1fr 1fr;align-items:end;gap:60px}}
+.rn-tools{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:24px}
+.rn-q{flex:1 1 260px;min-width:0;font:inherit;font-size:16px;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:14px 22px;-webkit-appearance:none;appearance:none}
+.rn-q::placeholder{color:var(--ink-3)}
+.rn-q:focus{outline:none;border-color:var(--rose)}
+.okr-g{display:grid;gap:12px}
+@media (min-width:900px){.okr-g{grid-template-columns:1fr 1fr;gap:14px}}
+.okr{border:1px solid var(--line);border-radius:var(--r-lg);background:var(--card);min-width:0}
+.okr summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:14px;padding:20px 22px;font-family:var(--f-display);font-size:clamp(20px,2.3vw,24px);line-height:1.2}
+.okr summary::-webkit-details-marker{display:none}
+.okr summary small{display:block;font-family:var(--f-sans);font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3);margin-top:4px}
+.okr summary::after{content:"+";font-family:var(--f-sans);font-weight:300;font-size:26px;color:var(--rose);flex:none;transition:transform .35s var(--ease-out)}
+.okr[open] summary::after{transform:rotate(45deg)}
+.okr-in{padding:0 22px 22px;display:flex;flex-wrap:wrap;gap:8px}
+.chip{display:inline-flex;align-items:center;min-height:40px;border:1px solid var(--line);border-radius:999px;padding:8px 16px;font-size:13px;line-height:1.2;text-decoration:none;color:var(--ink-2);transition:border-color .3s,color .3s,background .3s,transform .3s var(--ease-out)}
+.chip:hover{border-color:var(--rose);color:var(--ink);background:rgba(168,128,120,.1);transform:translateY(-2px)}
+.chip[hidden]{display:none}
+.rn-more{margin-top:24px;display:flex;flex-wrap:wrap;gap:10px}
+
+/* ---------- Страницы районов, ЗАГСов, Подмосковья ---------- */
+.dz-intro{padding:calc(140px + env(safe-area-inset-top,0px)) 0 clamp(36px,6vw,64px);background:#000}
+.dz-intro .wrap{display:grid;gap:22px}
+.dz-intro .crumbs{color:#C9D0C4}
+.dz-intro .sp-h1{max-width:20ch}
+.dz-intro .sp-lead{color:var(--on-night-2);max-width:48ch}
+.dz-tags{display:flex;flex-wrap:wrap;gap:8px}
+.dz-tags span{border:1px solid var(--line);border-radius:999px;padding:7px 14px;font-size:12px;letter-spacing:.08em;color:var(--ink-2)}
+.dz-tags b{color:var(--ink);font-weight:500}
+.dz-cover{margin:0;border-radius:var(--r);overflow:hidden;aspect-ratio:16/9;background:#0d0d0d;position:relative}
+.dz-cover img{width:100%;height:100%;object-fit:cover}
+.dz-cover figcaption{position:absolute;left:14px;bottom:12px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,.8);text-shadow:0 1px 8px rgba(0,0,0,.7)}
+.dz-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media (min-width:860px){.dz-facts{grid-template-columns:repeat(4,1fr);gap:14px}}
+.dz-fact{border:1px solid var(--line);border-radius:var(--r);padding:16px 18px;background:var(--card);min-width:0}
+.dz-fact small{display:block;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3)}
+.dz-fact b{display:block;font-family:var(--f-display);font-weight:400;font-size:clamp(20px,2.4vw,26px);line-height:1.15;margin-top:8px}
+.dz-sec{padding-block:clamp(40px,7vw,84px)}
+.dz-layout{display:grid;gap:44px}
+@media (min-width:1020px){.dz-layout{grid-template-columns:minmax(0,1fr) 340px;gap:72px;align-items:start}}
+.dz-aside{display:grid;gap:14px;align-content:start}
+@media (min-width:1020px){.dz-aside{position:sticky;top:96px}}
+.dz-cta{border:1px solid rgba(201,163,154,.45);border-radius:var(--r-lg);padding:24px;display:grid;gap:12px;background:linear-gradient(160deg,rgba(139,151,133,.12),rgba(168,128,120,.08))}
+.dz-cta .sum{font-family:var(--f-display);font-size:42px;line-height:1}
+.dz-cta .sum span{font-size:.45em;color:#C9A39A;margin-left:6px}
+.dz-cta p{margin:0;font-size:14px;color:var(--ink-2)}
+.dz-cta .btn{width:100%}
+.dz-toc{border:1px solid var(--line);border-radius:var(--r-lg);padding:20px 22px;background:var(--card)}
+.dz-toc b{display:block;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--ink-3);margin-bottom:10px;font-weight:500}
+.dz-toc ol{margin:0;padding:0;list-style:none;display:grid;gap:2px;counter-reset:t}
+.dz-toc a{display:block;padding:7px 0;font-size:14px;color:var(--ink-2);text-decoration:none;transition:color .25s,padding .3s var(--ease-out)}
+.dz-toc a:hover{color:var(--ink);padding-left:6px}
+.dz-art{min-width:0}
+.dz-art>section{padding-top:8px}
+.dz-art h2{font-family:var(--f-display);font-size:clamp(28px,3.6vw,42px);line-height:1.08;margin:clamp(40px,6vw,64px) 0 18px;scroll-margin-top:90px}
+.dz-art>section:first-child h2{margin-top:0}
+.dz-art h3{font-family:var(--f-display);font-size:clamp(21px,2.4vw,25px);line-height:1.2;margin:28px 0 10px}
+.dz-art p{margin:0 0 16px;color:var(--ink-2);max-width:68ch}
+.dz-art p b,.dz-art li b{color:var(--ink);font-weight:500}
+.dz-art a:not(.chip):not(.btn){color:var(--ink);text-decoration-color:rgba(201,163,154,.6);text-underline-offset:3px}
+.dz-art ul,.dz-art ol.dz-ol{margin:0 0 18px;padding-left:1.2em;color:var(--ink-2);max-width:68ch;display:grid;gap:8px}
+.dz-art li::marker{color:var(--rose)}
+.dz-rows{border-top:1px solid var(--line);margin:8px 0 18px;max-width:68ch}
+.dz-rows div{display:flex;justify-content:space-between;gap:16px;padding:14px 0;border-bottom:1px solid var(--line);color:var(--ink-2)}
+.dz-rows b{color:var(--ink);font-weight:500;font-variant-numeric:tabular-nums;white-space:nowrap}
+.dz-zcs{display:grid;gap:12px;margin:14px 0 22px}
+@media (min-width:700px){.dz-zcs{grid-template-columns:1fr 1fr}}
+.dz-zc{border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;background:var(--card);display:grid;gap:6px;text-decoration:none;color:inherit;min-width:0;transition:border-color .3s,transform .4s var(--ease-out)}
+.dz-zc:hover{border-color:var(--rose)}
+.dz-zc b{font-family:var(--f-display);font-weight:400;font-size:21px;line-height:1.2}
+.dz-zc span{font-size:14px;color:var(--ink-2)}
+.dz-zc small{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--rose)}
+.dz-pls{display:grid;gap:12px;margin:14px 0 22px}
+@media (min-width:700px){.dz-pls{grid-template-columns:1fr 1fr}}
+.dz-pl{border:1px solid var(--line);border-radius:var(--r);padding:18px 20px;background:var(--card);min-width:0}
+.dz-pl b{display:block;font-family:var(--f-display);font-weight:400;font-size:21px;line-height:1.2;margin-bottom:6px}
+.dz-pl span{font-size:14px;color:var(--ink-2)}
+.dz-steps{display:grid;gap:0;border-top:1px solid var(--line);margin:10px 0 20px;counter-reset:ds;max-width:68ch}
+.dz-step{display:grid;grid-template-columns:56px 1fr;gap:4px 14px;padding:16px 0;border-bottom:1px solid var(--line)}
+.dz-step::before{counter-increment:ds;content:counter(ds,decimal-leading-zero);font-family:var(--f-serif);font-style:italic;font-size:22px;color:var(--rose);grid-row:span 2}
+.dz-step b{font-family:var(--f-display);font-weight:400;font-size:20px;color:var(--ink)}
+.dz-step span{color:var(--ink-2);font-size:15px}
+.dz-links{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 0}
+.dz-note{border-left:2px solid var(--rose);padding:4px 0 4px 16px;margin:18px 0;color:var(--ink-2);font-size:14px;max-width:68ch}
+.dz-faq{margin-top:8px}
+.dz-faq .faq{border-top:1px solid var(--line)}
+.dz-hub{display:grid;gap:14px}
+.dz-hub-g{display:grid;gap:12px}
+@media (min-width:700px){.dz-hub-g{grid-template-columns:1fr 1fr}}
+@media (min-width:1100px){.dz-hub-g{grid-template-columns:repeat(3,1fr)}}
+
+/* шапка: на средних экранах меню в бургере, чтобы ничего не вылезало по ширине */
+@media (min-width:980px) and (max-width:1219px){
+  .nav{display:none!important}
+  .burger{display:grid!important}
+  .hdr-tel{display:flex!important}
+}
+@media (min-width:1220px){.nav{gap:26px}.nav a{letter-spacing:.2em}}
