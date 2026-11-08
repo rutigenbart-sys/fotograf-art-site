@@ -4,7 +4,7 @@
   googleAnalytics: ID потока GA4, например 'G-ABC123XYZ'
   vkPixel: ID пикселя VK Рекламы (Top@Mail.ru), например '3456789'
   Цели для всех трёх: call (нажал на телефон), whatsapp, telegram, max. */
-window.SITE_ANALYTICS={yandexMetrika:'109492064',googleAnalytics:'',vkPixel:''};
+window.SITE_ANALYTICS={yandexMetrika:'114134641',googleAnalytics:'',vkPixel:''};
 (function(c,w,d){
   // счётчики работают только на настоящем домене, чтобы превью и тесты не портили статистику
   if(!/(^|\.)(xn--80af6aaljmg\.art|фотограф\.art)$/.test(location.hostname)){w.siteGoal=function(){};return;}
@@ -12,7 +12,7 @@ window.SITE_ANALYTICS={yandexMetrika:'109492064',googleAnalytics:'',vkPixel:''};
   if(c.yandexMetrika){
     w.ym=w.ym||function(){(w.ym.a=w.ym.a||[]).push(arguments)};w.ym.l=1*new Date();
     add('https://mc.yandex.ru/metrika/tag.js');
-    w.ym(+c.yandexMetrika,'init',{clickmap:true,trackLinks:true,accurateTrackBounce:true,webvisor:true});
+    w.ym(+c.yandexMetrika,'init',{ssr:true,webvisor:true,clickmap:true,ecommerce:'dataLayer',referrer:document.referrer,url:location.href,accurateTrackBounce:true,trackLinks:true});
   }
   if(c.googleAnalytics){
     w.dataLayer=w.dataLayer||[];w.gtag=function(){w.dataLayer.push(arguments)};

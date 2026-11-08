@@ -352,7 +352,7 @@ def page(path, title, desc, h1, lead, crumbs, body, tags=(), cover=None, cover_a
 <script src="/js/analytics.js"></script>
 </head>
 <body>
-<noscript><div><img src="https://mc.yandex.ru/watch/109492064" style="position:absolute;left:-9999px" alt=""></div></noscript>
+<noscript><div><img src="https://mc.yandex.ru/watch/114134641" style="position:absolute;left:-9999px" alt=""></div></noscript>
 {SPRITE}
 {HEADER}
 <main id="top">
