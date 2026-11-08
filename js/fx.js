@@ -9,7 +9,7 @@ const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 let lenis=null;
 if(!reduce&&window.Lenis){
   try{
-    lenis=new Lenis({duration:1.15,easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)),smoothWheel:true,wheelMultiplier:.9});
+    lenis=new Lenis({duration:.6,easing:t=>Math.min(1,1.001-Math.pow(2,-10*t)),smoothWheel:true,wheelMultiplier:1.6,touchMultiplier:1.5});
     window.__lenis=lenis;
     const raf=t=>{lenis.raf(t);requestAnimationFrame(raf)}; requestAnimationFrame(raf);
     // открытое меню блокирует прокрутку
